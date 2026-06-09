@@ -1,8 +1,6 @@
 package com.eventhub.controller;
 
-import com.eventhub.dto.ApiResponse;
-import com.eventhub.dto.RegisterRequest;
-import com.eventhub.dto.UserResponse;
+import com.eventhub.dto.*;
 import com.eventhub.entity.AppUser;
 import com.eventhub.service.AppUserService;
 import jakarta.validation.Valid;
@@ -30,5 +28,14 @@ public class AuthController {
                 new ApiResponse<>(true, "User registered successfully", savedUser);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponse>> loginUser(
+            @Valid@RequestBody LoginRequest request
+            ){
+        LoginResponse loginResponse=appUserService.loginUser(request);
+        ApiResponse<LoginResponse>response =new ApiResponse<>(true,"Login Successful",loginResponse);
+        return ResponseEntity.ok(response);
     }
 }
