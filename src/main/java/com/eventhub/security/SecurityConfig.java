@@ -3,6 +3,7 @@ package com.eventhub.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -10,6 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 public class SecurityConfig {
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
@@ -21,15 +23,33 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public APIs
                         .requestMatchers(
+                                "/api/auth/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/api/auth/**"
+                                "/v3/api-docs/**"
                         ).permitAll()
+
+                        // ADMIN APIs
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // ORGANIZER APIs
+                        .requestMatchers("/api/organizer/**").hasAnyRole("ADMIN", "ORGANIZER")
+
+                        // CUSTOMER APIs
+                        .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+
+                        // Everything else must be authenticated
                         .anyRequest().authenticated()
-                ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                )
+                .addFilterBefore(jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

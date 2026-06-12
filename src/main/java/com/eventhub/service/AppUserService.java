@@ -5,6 +5,7 @@ import com.eventhub.dto.LoginResponse;
 import com.eventhub.dto.RegisterRequest;
 import com.eventhub.dto.UserResponse;
 import com.eventhub.entity.AppUser;
+import com.eventhub.entity.Role;
 import com.eventhub.exception.DuplicateResourceException;
 import com.eventhub.repository.AppUserRepository;
 import com.eventhub.security.JwtService;
@@ -36,7 +37,7 @@ public class AppUserService {
 
         //after encrypting using bcrypt
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
+        user.setRole(Role.CUSTOMER);
         AppUser savedUser = appUserRepository.save(user);
 
         UserResponse response = new UserResponse();
