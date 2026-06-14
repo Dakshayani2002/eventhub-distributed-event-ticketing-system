@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/organizer/**").hasAnyRole("ADMIN", "ORGANIZER")
 
                         // CUSTOMER APIs
-                        .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER","ORGANIZER","ADMIN")
 
                         // Everything else must be authenticated
                         .anyRequest().authenticated()
