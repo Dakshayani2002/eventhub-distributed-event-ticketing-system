@@ -12,6 +12,7 @@ import com.eventhub.repository.BookingRepository;
 import com.eventhub.repository.EventRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,6 +32,7 @@ public class BookingServiceImpl implements BookingService {
         this.appuserRepository = appuserRepository;
     }
 
+    @Transactional
     @Override
     public BookingResponse bookTicket(BookingRequest request) {
 
@@ -86,6 +88,7 @@ public class BookingServiceImpl implements BookingService {
         return response;
     }
 
+    @Transactional
     @Override
     public BookingResponse cancelBooking(Long bookingId) {
 
