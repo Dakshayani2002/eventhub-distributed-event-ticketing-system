@@ -3,6 +3,7 @@ package com.eventhub.controller;
 import com.eventhub.dto.BookingRequest;
 import com.eventhub.dto.BookingResponse;
 import com.eventhub.service.BookingService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,5 +19,14 @@ public class BookingController {
     @PostMapping
     public BookingResponse bookTicket(@RequestBody BookingRequest request) {
         return bookingService.bookTicket(request);
+    }
+
+    @PatchMapping("/{bookingId}/cancel")
+    public ResponseEntity<BookingResponse> cancelBooking(
+            @PathVariable Long bookingId) {
+
+        return ResponseEntity.ok(
+                bookingService.cancelBooking(bookingId)
+        );
     }
 }

@@ -29,4 +29,7 @@ public class Booking {
     private Integer numberOfTickets;
 
     private BigDecimal totalAmount;
+
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status;
 }

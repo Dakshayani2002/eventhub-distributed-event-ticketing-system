@@ -6,4 +6,6 @@ import com.eventhub.dto.BookingResponse;
 public interface BookingService {
 
     BookingResponse bookTicket(BookingRequest request);
+    BookingResponse cancelBooking(Long bookingId);
+
 }
