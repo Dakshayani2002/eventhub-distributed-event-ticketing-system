@@ -23,13 +23,16 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final EventRepository eventRepository;
     private final AppUserRepository appuserRepository;
+    private final BookingLockService bookingLockService;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
                               EventRepository eventRepository,
-                              AppUserRepository appuserRepository) {
+                              AppUserRepository appuserRepository,
+                              BookingLockService bookingLockService) {
         this.bookingRepository = bookingRepository;
         this.eventRepository = eventRepository;
         this.appuserRepository = appuserRepository;
+        this.bookingLockService=bookingLockService;
     }
 
     @Transactional
@@ -48,44 +51,62 @@ public class BookingServiceImpl implements BookingService {
         Event event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
+        if (!bookingLockService.acquireLock(event.getId())) {
+            throw new RuntimeException(
+                    "Another booking is already in progress for this event. Please try again."
+            );
+        }
+        //for testing purpose
+//        try {
+//            System.out.println("START SLEEPING");
+//            Thread.sleep(30000);
+//            System.out.println("WAKE UP");
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+
         // 3. Check seats
         if (event.getAvailableSeats() < request.getNumberOfTickets()) {
             throw new RuntimeException("Not enough seats available");
         }
-
+        try {
         // 4. Calculate total price
-        BigDecimal totalAmount =
-                BigDecimal.valueOf(event.getPrice())
-                        .multiply(BigDecimal.valueOf(request.getNumberOfTickets()));
 
-        // 5. Create booking
-        Booking booking = new Booking();
-        booking.setCustomer(user);
-        booking.setEvent(event);
-        booking.setNumberOfTickets(request.getNumberOfTickets());
-        booking.setTotalAmount(totalAmount);
-        booking.setBookingDate(LocalDateTime.now());
+            BigDecimal totalAmount =
+                    BigDecimal.valueOf(event.getPrice())
+                            .multiply(BigDecimal.valueOf(request.getNumberOfTickets()));
 
-        // 6. Reduce seats
-        event.setAvailableSeats(
-                event.getAvailableSeats() - request.getNumberOfTickets()
-        );
-        booking.setStatus(BookingStatus.BOOKED);
+            // 5. Create booking
+            Booking booking = new Booking();
+            booking.setCustomer(user);
+            booking.setEvent(event);
+            booking.setNumberOfTickets(request.getNumberOfTickets());
+            booking.setTotalAmount(totalAmount);
+            booking.setBookingDate(LocalDateTime.now());
 
-        // 7. Save
-        bookingRepository.save(booking);
-        eventRepository.save(event);
+            // 6. Reduce seats
+            event.setAvailableSeats(
+                    event.getAvailableSeats() - request.getNumberOfTickets()
+            );
+            booking.setStatus(BookingStatus.BOOKED);
 
-        // 8. Response
-        BookingResponse response = new BookingResponse();
-        response.setBookingId(booking.getId());
-        response.setEventId(event.getId());
-        response.setEventTitle(event.getTitle());
-        response.setNumberOfTickets(booking.getNumberOfTickets());
-        response.setTotalAmount(booking.getTotalAmount());
-        response.setBookingDate(booking.getBookingDate());
+            // 7. Save
+            bookingRepository.save(booking);
+            eventRepository.save(event);
 
-        return response;
+            // 8. Response
+            BookingResponse response = new BookingResponse();
+            response.setBookingId(booking.getId());
+            response.setEventId(event.getId());
+            response.setEventTitle(event.getTitle());
+            response.setNumberOfTickets(booking.getNumberOfTickets());
+            response.setTotalAmount(booking.getTotalAmount());
+            response.setBookingDate(booking.getBookingDate());
+
+            return response;
+        }  finally {
+            bookingLockService.releaseLock(event.getId());
+        }
     }
 
     @Transactional
