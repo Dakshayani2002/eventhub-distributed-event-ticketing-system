@@ -2,12 +2,11 @@ package com.eventhub.service;
 
 import com.eventhub.dto.PaymentRequest;
 import com.eventhub.dto.PaymentResponse;
-import com.eventhub.entity.Booking;
-import com.eventhub.entity.Payment;
-import com.eventhub.entity.PaymentStatus;
+import com.eventhub.entity.*;
 import com.eventhub.exception.DuplicateResourceException;
 import com.eventhub.exception.ResourceNotFoundException;
 import com.eventhub.repository.BookingRepository;
+import com.eventhub.repository.EventRepository;
 import com.eventhub.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +19,13 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
+    private final EventRepository eventRepository;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
-                              BookingRepository bookingRepository) {
+                              BookingRepository bookingRepository,EventRepository eventRepository) {
         this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
+        this.eventRepository=eventRepository;
     }
 
     @Transactional
@@ -143,4 +144,57 @@ public class PaymentServiceImpl implements PaymentService {
 
         return response;
     }
+
+    @Transactional
+    @Override
+    public PaymentResponse refundPayment(Long paymentId) {
+
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Payment not found"));
+
+        // Prevent refund if already refunded
+        if (payment.getStatus() == PaymentStatus.REFUNDED) {
+            throw new DuplicateResourceException(
+                    "Payment already refunded");
+        }
+
+        // Allow refund ONLY for SUCCESS payments
+        if (payment.getStatus() != PaymentStatus.SUCCESS) {
+            throw new DuplicateResourceException(
+                    "Only successful payments can be refunded");
+        }
+
+        Booking booking = payment.getBooking();
+
+        Event event = booking.getEvent();
+
+        // Restore seats
+        event.setAvailableSeats(
+                event.getAvailableSeats() + booking.getNumberOfTickets()
+        );
+
+        // Update statuses
+        booking.setStatus(BookingStatus.CANCELLED);
+        payment.setStatus(PaymentStatus.REFUNDED);
+
+        // Save all entities
+        eventRepository.save(event);
+        bookingRepository.save(booking);
+        paymentRepository.save(payment);
+
+        // Build response
+        PaymentResponse response = new PaymentResponse();
+
+        response.setPaymentId(payment.getId());
+        response.setBookingId(booking.getId());
+        response.setTransactionId(payment.getTransactionId());
+        response.setAmount(payment.getAmount());
+        response.setStatus(payment.getStatus());
+        response.setPaymentDate(payment.getPaymentDate());
+
+        return response;
+    }
+
+
 }

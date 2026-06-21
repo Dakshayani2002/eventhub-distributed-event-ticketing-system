@@ -30,4 +30,12 @@ public class PaymentController {
         return ResponseEntity.ok(
                 paymentService.getPaymentById(paymentId));
     }
+
+    @PostMapping("/{paymentId}/refund")
+    public ResponseEntity<PaymentResponse> refundPayment(
+            @PathVariable Long paymentId) {
+
+        return ResponseEntity.ok(
+                paymentService.refundPayment(paymentId));
+    }
 }
