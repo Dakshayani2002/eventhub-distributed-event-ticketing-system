@@ -10,5 +10,5 @@ public interface PaymentService {
     PaymentResponse makePayment(PaymentRequest request);
     PaymentResponse getPaymentById(Long paymentId);
     PaymentResponse refundPayment(Long paymentId);
-
+    List<PaymentResponse> getMyPayments();
 }

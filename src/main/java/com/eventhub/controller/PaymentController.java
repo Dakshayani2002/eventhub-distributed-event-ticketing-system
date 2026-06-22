@@ -6,6 +6,8 @@ import com.eventhub.service.PaymentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
@@ -37,5 +39,13 @@ public class PaymentController {
 
         return ResponseEntity.ok(
                 paymentService.refundPayment(paymentId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PaymentResponse>>
+    getMyPayments() {
+
+        return ResponseEntity.ok(
+                paymentService.getMyPayments());
     }
 }

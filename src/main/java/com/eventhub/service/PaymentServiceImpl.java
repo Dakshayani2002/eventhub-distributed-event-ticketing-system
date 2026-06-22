@@ -10,8 +10,9 @@ import com.eventhub.repository.EventRepository;
 import com.eventhub.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -196,5 +197,45 @@ public class PaymentServiceImpl implements PaymentService {
         return response;
     }
 
+    @Override
+    public List<PaymentResponse> getMyPayments() {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        List<Payment> payments =
+                paymentRepository
+                        .findByBooking_Customer_EmailOrderByPaymentDateDesc(
+                                email);
+
+        return payments.stream()
+                .map(payment -> {
+
+                    PaymentResponse response =
+                            new PaymentResponse();
+
+                    response.setPaymentId(
+                            payment.getId());
+
+                    response.setBookingId(
+                            payment.getBooking().getId());
+
+                    response.setTransactionId(
+                            payment.getTransactionId());
+
+                    response.setAmount(
+                            payment.getAmount());
+
+                    response.setStatus(
+                            payment.getStatus());
+
+                    response.setPaymentDate(
+                            payment.getPaymentDate());
+
+                    return response;
+                })
+                .toList();
+    }
 }
