@@ -19,6 +19,8 @@ public class EventResponse {
     private Integer totalSeats;
     private Integer availableSeats;
     private Double price;
+    private Long organizerId;
+    private String organizerName;
 
     public EventResponse() {
     }
