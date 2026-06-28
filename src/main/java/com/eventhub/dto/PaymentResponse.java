@@ -1,6 +1,6 @@
 package com.eventhub.dto;
 
-import com.eventhub.entity.PaymentStatus;
+import com.eventhub.enums.PaymentStatus;
 import lombok.Getter;
 import lombok.Setter;
 

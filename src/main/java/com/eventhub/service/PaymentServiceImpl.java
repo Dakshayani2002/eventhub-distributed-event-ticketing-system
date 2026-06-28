@@ -3,6 +3,8 @@ package com.eventhub.service;
 import com.eventhub.dto.PaymentRequest;
 import com.eventhub.dto.PaymentResponse;
 import com.eventhub.entity.*;
+import com.eventhub.enums.BookingStatus;
+import com.eventhub.enums.PaymentStatus;
 import com.eventhub.exception.DuplicateResourceException;
 import com.eventhub.exception.ResourceNotFoundException;
 import com.eventhub.repository.BookingRepository;

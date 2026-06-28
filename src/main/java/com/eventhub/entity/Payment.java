@@ -1,5 +1,6 @@
 package com.eventhub.entity;
 
+import com.eventhub.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

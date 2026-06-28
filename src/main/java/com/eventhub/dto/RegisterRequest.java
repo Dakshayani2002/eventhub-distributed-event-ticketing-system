@@ -1,6 +1,5 @@
 package com.eventhub.dto;
 
-import com.eventhub.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 

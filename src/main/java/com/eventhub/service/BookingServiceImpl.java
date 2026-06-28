@@ -4,7 +4,7 @@ import com.eventhub.dto.BookingRequest;
 import com.eventhub.dto.BookingResponse;
 import com.eventhub.entity.AppUser;
 import com.eventhub.entity.Booking;
-import com.eventhub.entity.BookingStatus;
+import com.eventhub.enums.BookingStatus;
 import com.eventhub.entity.Event;
 import com.eventhub.exception.ResourceNotFoundException;
 import com.eventhub.kafka.Dto.BookingEvent;

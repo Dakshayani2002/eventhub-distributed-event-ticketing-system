@@ -5,7 +5,7 @@ import com.eventhub.dto.LoginResponse;
 import com.eventhub.dto.RegisterRequest;
 import com.eventhub.dto.UserResponse;
 import com.eventhub.entity.AppUser;
-import com.eventhub.entity.Role;
+import com.eventhub.enums.Role;
 import com.eventhub.exception.DuplicateResourceException;
 import com.eventhub.repository.AppUserRepository;
 import com.eventhub.security.JwtService;

@@ -1,5 +1,6 @@
 package com.eventhub.entity;
 
+import com.eventhub.enums.Role;
 import jakarta.persistence.*;
 
 @Entity

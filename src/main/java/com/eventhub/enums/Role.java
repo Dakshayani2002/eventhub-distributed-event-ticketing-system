@@ -1,4 +1,4 @@
-package com.eventhub.entity;
+package com.eventhub.enums;
 
 public enum Role {
     ADMIN,

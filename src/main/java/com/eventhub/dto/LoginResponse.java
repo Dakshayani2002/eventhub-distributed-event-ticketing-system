@@ -1,6 +1,6 @@
 package com.eventhub.dto;
 
-import com.eventhub.entity.Role;
+import com.eventhub.enums.Role;
 import lombok.Getter;
 import lombok.Setter;
 
