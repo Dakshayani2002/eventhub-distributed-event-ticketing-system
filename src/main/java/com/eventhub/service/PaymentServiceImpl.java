@@ -14,7 +14,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
@@ -37,7 +39,11 @@ public class PaymentServiceImpl implements PaymentService {
                         request.getBookingId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Booking not found"));
-
+        log.info(
+                "Payment request received. BookingId={} Amount={}",
+                booking.getId(),
+                booking.getTotalAmount()
+        );
         Payment existingPayment =
                 paymentRepository.findByBooking(booking)
                         .orElse(null);
@@ -47,7 +53,10 @@ public class PaymentServiceImpl implements PaymentService {
         // If payment already successful, block payment
         if (existingPayment != null &&
                 existingPayment.getStatus() == PaymentStatus.SUCCESS) {
-
+            log.warn(
+                    "Duplicate payment attempt for BookingId={}",
+                    booking.getId()
+            );
             throw new DuplicateResourceException(
                     "Payment already completed for this booking");
         }
@@ -55,7 +64,10 @@ public class PaymentServiceImpl implements PaymentService {
         // If previous payment failed, reuse the same record
         if (existingPayment != null &&
                 existingPayment.getStatus() == PaymentStatus.FAILED) {
-
+            log.info(
+                    "Retry payment for BookingId={}",
+                    booking.getId()
+            );
             payment = existingPayment;
         }
         else {
@@ -89,7 +101,11 @@ public class PaymentServiceImpl implements PaymentService {
 
             booking.setPaymentStatus(
                     PaymentStatus.SUCCESS);
-
+            log.info(
+                    "Payment successful. BookingId={} TransactionId={}",
+                    booking.getId(),
+                    payment.getTransactionId()
+            );
             bookingRepository.save(booking);
         }
 

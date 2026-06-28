@@ -7,6 +7,8 @@ import com.eventhub.entity.Booking;
 import com.eventhub.entity.BookingStatus;
 import com.eventhub.entity.Event;
 import com.eventhub.exception.ResourceNotFoundException;
+import com.eventhub.kafka.Dto.BookingEvent;
+import com.eventhub.kafka.Producer.BookingEventProducer;
 import com.eventhub.repository.AppUserRepository;
 import com.eventhub.repository.BookingRepository;
 import com.eventhub.repository.EventRepository;
@@ -24,15 +26,18 @@ public class BookingServiceImpl implements BookingService {
     private final EventRepository eventRepository;
     private final AppUserRepository appuserRepository;
     private final BookingLockService bookingLockService;
+    private final BookingEventProducer bookingEventProducer;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
                               EventRepository eventRepository,
                               AppUserRepository appuserRepository,
-                              BookingLockService bookingLockService) {
+                              BookingLockService bookingLockService,
+                              BookingEventProducer bookingEventProducer) {
         this.bookingRepository = bookingRepository;
         this.eventRepository = eventRepository;
         this.appuserRepository = appuserRepository;
         this.bookingLockService=bookingLockService;
+        this.bookingEventProducer=bookingEventProducer;
     }
 
     @Transactional
@@ -92,6 +97,18 @@ public class BookingServiceImpl implements BookingService {
 
             // 7. Save
             bookingRepository.save(booking);
+
+            //kafka added
+
+            BookingEvent events = new BookingEvent(
+                    booking.getId(),
+                    booking.getCustomer().getId(),
+                    booking.getEvent().getId(),
+                    booking.getStatus().name()
+            );
+
+            bookingEventProducer.sendBookingCreatedEvent(events);
+
             eventRepository.save(event);
 
             // 8. Response
