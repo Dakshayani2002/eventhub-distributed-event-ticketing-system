@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class BookingEventProducer {
 
-    private final KafkaTemplate<String, BookingEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     private static final String TOPIC = "booking-topic";
 

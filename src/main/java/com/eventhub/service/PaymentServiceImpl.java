@@ -7,6 +7,8 @@ import com.eventhub.enums.BookingStatus;
 import com.eventhub.enums.PaymentStatus;
 import com.eventhub.exception.DuplicateResourceException;
 import com.eventhub.exception.ResourceNotFoundException;
+import com.eventhub.kafka.Dto.PaymentEvent;
+import com.eventhub.kafka.Producer.PaymentEventProducer;
 import com.eventhub.repository.BookingRepository;
 import com.eventhub.repository.EventRepository;
 import com.eventhub.repository.PaymentRepository;
@@ -25,12 +27,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final EventRepository eventRepository;
+    private final PaymentEventProducer paymentEventProducer;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
-                              BookingRepository bookingRepository,EventRepository eventRepository) {
+                              BookingRepository bookingRepository,EventRepository eventRepository, PaymentEventProducer paymentEventProducer) {
         this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
         this.eventRepository=eventRepository;
+        this.paymentEventProducer=paymentEventProducer;
     }
 
     @Transactional
@@ -51,6 +55,7 @@ public class PaymentServiceImpl implements PaymentService {
                         .orElse(null);
 
         Payment payment;
+
 
         // If payment already successful, block payment
         if (existingPayment != null &&
@@ -98,6 +103,7 @@ public class PaymentServiceImpl implements PaymentService {
                 LocalDateTime.now());
 
         paymentRepository.save(payment);
+        log.info("💳 Payment status = {}", status);
 
         if (status == PaymentStatus.SUCCESS) {
 
@@ -109,6 +115,19 @@ public class PaymentServiceImpl implements PaymentService {
                     payment.getTransactionId()
             );
             bookingRepository.save(booking);
+            //payment producer sending event to kafka
+            PaymentEvent paymentEvent = PaymentEvent.builder()
+                    .paymentId(payment.getId())
+                    .bookingId(booking.getId())
+                    .userId(booking.getCustomer().getId())
+                    .amount(payment.getAmount())
+                    .paymentStatus(payment.getStatus().name())
+                    .build();
+            log.info("📤 Sending Payment Event to Kafka...");
+            paymentEventProducer.sendPaymentEvent(paymentEvent);
+        }
+        else {
+            log.warn("Payment FAILED for BookingId={}", booking.getId());
         }
 
         PaymentResponse response =

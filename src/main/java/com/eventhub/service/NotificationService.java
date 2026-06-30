@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.eventhub.dto.NotificationResponse;
 import com.eventhub.kafka.Dto.BookingEvent;
+import com.eventhub.kafka.Dto.PaymentEvent;
 import org.springframework.stereotype.Service;
 import com.eventhub.entity.Notification;
 import com.eventhub.enums.NotificationStatus;
@@ -91,5 +92,20 @@ public class NotificationService {
         return notificationRepository.countByUserIdAndStatus(
                 userId,
                 NotificationStatus.UNREAD);
+    }
+
+    public void createPaymentNotification(PaymentEvent event) {
+
+        Notification notification = Notification.builder()
+                .userId(event.getUserId())
+                .message("Payment successful for Booking ID: " + event.getBookingId())
+                .notificationType(NotificationType.PAYMENT)
+                .status(NotificationStatus.UNREAD)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        notificationRepository.save(notification);
+
+        log.info("Notification saved successfully for paymentId: {}", event.getPaymentId());
     }
 }

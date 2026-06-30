@@ -11,9 +11,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,9 +33,15 @@ public class KafkaConfig {
         return new NewTopic("booking-topic", 1, (short) 1);
     }
 
+    @Bean
+    public NewTopic paymentTopic() {
+        return TopicBuilder.name("payment-topic")
+                .build();
+    }
+
     // Producer Configuration
     @Bean
-    public ProducerFactory<String, BookingEvent> producerFactory() {
+    public ProducerFactory<String, Object> producerFactory() {
 
         Map<String, Object> config = new HashMap<>();
 
@@ -61,7 +69,8 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, BookingEvent> kafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, BookingEvent>
+    kafkaListenerContainerFactory() {
 
         ConcurrentKafkaListenerContainerFactory<String, BookingEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
@@ -73,7 +82,7 @@ public class KafkaConfig {
 
     // KafkaTemplate Bean
     @Bean
-    public KafkaTemplate<String, BookingEvent> kafkaTemplate() {
+    public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }
