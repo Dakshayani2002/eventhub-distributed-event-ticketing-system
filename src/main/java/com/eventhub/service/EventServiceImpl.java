@@ -8,12 +8,18 @@ import com.eventhub.exception.ResourceNotFoundException;
 import com.eventhub.repository.AppUserRepository;
 import com.eventhub.repository.EventRepository;
 import com.eventhub.service.EventService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class EventServiceImpl implements EventService {
 
@@ -26,6 +32,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @CacheEvict(value = "allEvents", allEntries = true)
     public EventResponse createEvent(CreateEventRequest request) {
 
         Event event = new Event();
@@ -99,6 +106,14 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Caching(
+            put = {
+                    @CachePut(value = "events", key = "#eventId")
+            },
+            evict = {
+                    @CacheEvict(value = "allEvents", allEntries = true)
+            }
+    )
     public EventResponse updateEvent(
             Long eventId,
             CreateEventRequest request) {
@@ -132,6 +147,14 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Caching(
+            put = {
+                    @CachePut(value = "events", key = "#eventId")
+            },
+            evict = {
+                    @CacheEvict(value = "allEvents", allEntries = true)
+            }
+    )
     public EventResponse patchEvent(
             Long eventId,
             CreateEventRequest request) {
@@ -184,6 +207,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "events", key = "#eventId"),
+                    @CacheEvict(value = "allEvents", allEntries = true)
+            }
+    )
     public void deleteEvent(Long eventId) {
         Event event=eventRepository.findById(eventId).orElseThrow(()-> new ResourceNotFoundException("Event not found"));
         AppUser loggedInUser = getLoggedInUser();
@@ -198,8 +227,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Cacheable(value = "allEvents")
     public List<EventResponse> getAllEvents() {
-
+        log.info("Cache MISS - Fetching all events from database");
         List<Event> events = eventRepository.findAll();
 
         return events.stream()
@@ -208,8 +238,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Cacheable(value = "events", key = "#eventId")
     public EventResponse getEventDetails(Long eventId) {
-
+        log.info("Cache MISS - Fetching event {} from database", eventId);
         Event event = eventRepository
                 .findById(eventId)
                 .orElseThrow(() ->

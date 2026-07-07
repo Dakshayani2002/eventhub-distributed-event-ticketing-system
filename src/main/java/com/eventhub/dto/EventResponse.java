@@ -2,14 +2,13 @@ package com.eventhub.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Setter
 @Getter
 public class EventResponse {
-
     private Long id;
     private String title;
     private String description;
