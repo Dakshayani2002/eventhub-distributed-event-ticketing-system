@@ -28,13 +28,15 @@ public class PaymentServiceImpl implements PaymentService {
     private final BookingRepository bookingRepository;
     private final EventRepository eventRepository;
     private final PaymentEventProducer paymentEventProducer;
+    private final PaymentGatewayService paymentGatewayService;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
-                              BookingRepository bookingRepository,EventRepository eventRepository, PaymentEventProducer paymentEventProducer) {
+                              BookingRepository bookingRepository,EventRepository eventRepository, PaymentEventProducer paymentEventProducer,PaymentGatewayService paymentGatewayService) {
         this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
         this.eventRepository=eventRepository;
         this.paymentEventProducer=paymentEventProducer;
+        this.paymentGatewayService=paymentGatewayService;
     }
 
     @Transactional
@@ -88,7 +90,8 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setAmount(
                 booking.getTotalAmount());
 
-        boolean paymentSuccess = Math.random() > 0.2; // 80% success
+        boolean paymentSuccess =
+                paymentGatewayService.processPayment();
 
         PaymentStatus status = paymentSuccess
                 ? PaymentStatus.SUCCESS
