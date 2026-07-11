@@ -1,5 +1,6 @@
 package com.eventhub.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,12 @@ import org.springframework.stereotype.Service;
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
     @Override
-    @Retry(name = "paymentRetry", fallbackMethod = "paymentFallback")
+    @Retry(name = "paymentRetry", fallbackMethod = "retryFallback")
+//    @CircuitBreaker(
+//            name = "paymentCircuitBreaker",
+//            fallbackMethod = "circuitBreakerFallback"
+//    )
+
     public boolean processPayment() {
 
         log.info("Calling External Payment Gateway...");
@@ -17,7 +23,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         // Simulate temporary gateway failure (70% chance)
         if (Math.random() < 0.7) {
             log.warn("Payment Gateway Temporary Failure");
-            throw new RuntimeException("Temporary Gateway Failure");
+            throw new RuntimeException("Payment Gateway Down");
         }
 
         log.info("Payment Gateway Success");
@@ -25,10 +31,15 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         return true;
     }
 
-    public boolean paymentFallback(RuntimeException ex) {
-
-        log.error("Fallback executed: {}", ex.getMessage());
-
+    public boolean retryFallback(RuntimeException ex) {
+        log.error("========== RETRY FALLBACK ==========");
+        log.error("Retry exhausted: {}", ex.getMessage());
         return false;
     }
+
+//    public boolean circuitBreakerFallback(RuntimeException ex) {
+//        log.error("========== CIRCUIT BREAKER FALLBACK ==========");
+//        log.error("Circuit Breaker fallback: {}", ex.getMessage());
+//        return false;
+//    }
 }
