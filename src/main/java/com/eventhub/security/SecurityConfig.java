@@ -1,5 +1,6 @@
 package com.eventhub.security;
 
+import com.eventhub.logging.RequestLoggingFilter;
 import com.eventhub.Ratelimit.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,10 +20,12 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final RequestLoggingFilter requestLoggingFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitFilter rateLimitFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitFilter rateLimitFilter, RequestLoggingFilter requestLoggingFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.rateLimitFilter = rateLimitFilter;
+        this.requestLoggingFilter = requestLoggingFilter;
     }
 
     @Bean
@@ -56,8 +59,11 @@ public class SecurityConfig {
                         // Everything else must be authenticated
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter,
+                .addFilterBefore(requestLoggingFilter,
                         UsernamePasswordAuthenticationFilter.class)
+
+                .addFilterAfter(jwtAuthenticationFilter,
+                        RequestLoggingFilter.class)
 
                 .addFilterAfter(rateLimitFilter,
                         JwtAuthenticationFilter.class);
